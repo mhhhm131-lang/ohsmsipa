@@ -1,0 +1,22 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: ohsmsipa
+      POSTGRES_USER: ohsmsipa
+      POSTGRES_PASSWORD: ohsmsipa
+    ports:
+      - "5432:5432"
+
+  backend:
+    build: ./backend
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - ./backend:/app
+    working_dir: /app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db

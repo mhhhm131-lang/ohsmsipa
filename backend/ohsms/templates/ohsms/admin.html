@@ -1,0 +1,252 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>OHSMS – إدارة النظام والمستخدمين</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="{% static 'assets/css/styles.css' %}">
+
+</head>
+<body>
+<header class="top-header">
+  <div class="top-header-main">
+    <div>
+      <h1>نظام إدارة السلامة والصحة المهنية – OHSMS</h1>
+      <p>إدارة النظام – المستخدمين والأدوار والصلاحيات</p>
+    </div>
+    <div class="header-user" id="headerUserBox">
+      <div class="header-user-text">
+        <span id="headerUserName">غير مسجل دخول</span>
+        <span id="headerUserRole" class="header-user-role"></span>
+      </div>
+      <button class="btn btn-secondary btn-small" type="button" onclick="ohsmsLogout()">تسجيل الخروج</button>
+    </div>ٍٍ
+  </div>
+</header>
+
+<div class="main-wrapper">
+<aside class="sidebar">
+<h3>القائمة الرئيسية</h3>
+<a class="nav-link" href="{% url 'home' %}" data-perm="view_home">الصفحة الرئيسية</a>
+<a class="nav-link" href="{% url 'reports' %}" data-perm="view_reports">نظام البلاغات / سجل المتابعة</a>
+<a class="nav-link" href="{% url 'risk' %}" data-perm="view_risks">إدارة المخاطر</a>
+<a class="nav-link" href="{% url 'forms' %}" data-perm="view_forms">النماذج الرقمية</a>
+<a class="nav-link" href="{% url 'dashboard' %}" data-perm="view_dashboard">لوحة التحكم</a>
+<a class="nav-link" href="{% url 'system' %}" data-perm="view_system">إدارة النظام</a>
+<a class="nav-link" href="awareness.html" data-perm="view_awareness">التوعية والتثقيف</a>
+<a class="nav-link" href="vendors.html" data-perm="view_partners">العملاء والشركاء</a>
+
+</aside>
+
+
+
+  <main class="content">
+    <section class="card">
+      <h2>⚙️ إدارة النظام</h2>
+      <p class="hint">
+        من هذه الصفحة يمكن لمدير النظام إدارة المستخدمين، الأدوار والصلاحيات الأساسية،
+        وضبط إعدادات الدخول. هذه نسخة أولية يمكن توسعتها لاحقًا.
+      </p>
+      <div class="kpi-grid">
+        <div class="kpi-card light">
+          <div class="kpi-label">المستخدم الحالي</div>
+          <div class="kpi-value" id="adminCurrentUser">-</div>
+          <div class="kpi-sub" id="adminCurrentRole">-</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">الأدوار المعرفة</div>
+          <div class="kpi-value" id="adminRolesCount">-</div>
+          <div class="kpi-sub">عدد أنواع المستخدمين المعتمدة في النظام</div>
+        </div>
+        <div class="kpi-card light">
+          <div class="kpi-label">إدارة المستخدمين</div>
+          <div class="kpi-sub">إضافة / تعديل / تعطيل مستخدمين</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>👥 المستخدمون</h2>
+      <p class="hint">
+        من هنا يمكنك إدارة حسابات المستخدمين التجريبية (users.json) أو النسخة المخزنة في المتصفح.
+        في بيئة الإنتاج يتم ربط هذه الصفحة بقاعدة بيانات فعلية.
+      </p>
+      <div style="margin:8px 0; display:flex; flex-wrap:wrap; gap:8px;">
+        <button class="btn btn-primary" type="button" onclick="ohsmsOpenAddUserModal()">+ مستخدم جديد</button>
+      </div>
+      <div class="table-wrapper">
+        <table class="reports">
+          <thead>
+            <tr>
+              <th>اسم المستخدم</th>
+              <th>الاسم الكامل</th>
+              <th>الدور</th>
+              <th>إجراءات</th>
+            </tr>
+          </thead>
+          <tbody id="adminUsersTableBody"></tbody>
+        </table>
+      </div>
+    </section>
+    <section class="card">
+      <h2>🔐 الأدوار والصلاحيات</h2>
+      <p class="hint">
+        هذه المنطقة تعرض الأدوار (Roles) المعرفة في النظام والصلاحيات المرتبطة بكل دور.
+        يمكنك تعديل صلاحيات الدور أو إضافة أدوار جديدة حسب احتياج المنظمة.
+      </p>
+      <div style="margin:8px 0; display:flex; flex-wrap:wrap; gap:8px;">
+        <button class="btn btn-primary" type="button" onclick="ohsmsOpenAddRoleModal()">+ إضافة دور</button>
+        <button class="btn" type="button" onclick="ohsmsExportRoles()">تصدير الأدوار</button>
+        <button class="btn" type="button" onclick="ohsmsImportRoles()">استيراد الأدوار</button>
+        <input type="file" id="rolesImportFile" accept="application/json" style="display:none" onchange="ohsmsImportRolesFile(event)">
+      </div>
+      <div class="table-wrapper">
+        <table class="reports">
+          <thead>
+            <tr>
+              <th>ID الدور</th>
+              <th>الاسم بالعربي</th>
+              <th>الصلاحيات</th>
+              <th>إجراءات</th>
+            </tr>
+          </thead>
+          <tbody id="adminRolesTableBody"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</div>
+
+  <!-- Modals for users & roles management -->
+  <div class="modal hidden" id="addUserModal">
+    <label>الفرع</label>
+<input type="text" id="newUserBranch" class="input" placeholder="مثال: فرع الرياض">
+
+<label>الإدارة</label>
+<input type="text" id="newUserDepartment" class="input" placeholder="مثال: إدارة التشغيل">
+
+<label>القسم</label>
+<input type="text" id="newUserSection" class="input" placeholder="مثال: قسم الصيانة">
+
+    <div class="modal-box">
+      <h3>إضافة مستخدم</h3>
+      <p class="modal-hint">أدخل بيانات المستخدم الجديد وحدد دوره في النظام.</p>
+
+      <label>اسم المستخدم</label>
+      <input type="text" id="newUserUsername" class="input">
+
+      <label>الاسم العربي</label>
+      <input type="text" id="newUserFullNameAr" class="input">
+
+      <label>الاسم الإنجليزي</label>
+      <input type="text" id="newUserFullNameEn" class="input">
+
+      <label>كلمة المرور</label>
+      <input type="password" id="newUserPassword" class="input">
+
+      <label>الدور</label>
+      <select id="newUserRole" class="input"></select>
+
+      <div class="modal-actions">
+        <button class="btn btn-primary" type="button" onclick="ohsmsSaveNewUser()">حفظ</button>
+        <button class="btn" type="button" onclick="ohsmsCloseAddUserModal()">إلغاء</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal hidden" id="editUserModal">
+    <div class="modal-box wide">
+      <h3>تعديل مستخدم</h3>
+      <p class="modal-hint">يمكنك تعديل بيانات المستخدم وتخصيص صلاحيات إضافية أو إزالتها.</p>
+
+      <label>اسم المستخدم</label>
+      <input type="text" id="editUserUsername" class="input" disabled>
+
+      <label>الاسم العربي</label>
+      <input type="text" id="editUserFullNameAr" class="input">
+
+      <label>الاسم الإنجليزي</label>
+      <input type="text" id="editUserFullNameEn" class="input">
+
+      <label>الدور</label>
+      <select id="editUserRole" class="input"></select>
+
+      <label>كلمة مرور جديدة (اختياري)</label>
+      <input type="password" id="editUserPassword" class="input">
+
+      <h4 style="margin-top:16px;">الصلاحيات الخاصة بالمستخدم</h4>
+      <p class="modal-hint">يمكنك إضافة صلاحيات إضافية (إضافة) أو منع صلاحيات معينة (منع) لهذا المستخدم.</p>
+      <div id="userPermsList"></div>
+
+      <div class="modal-actions">
+        <button class="btn btn-primary" type="button" onclick="ohsmsSaveEditedUser()">حفظ</button>
+        <button class="btn" type="button" onclick="ohsmsCloseEditUserModal()">إلغاء</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal hidden" id="addRoleModal">
+    <div class="modal-box">
+      <h3>إضافة دور جديد</h3>
+      <p class="modal-hint">استخدم هذه النافذة لتعريف دور جديد في النظام.</p>
+
+      <label>ID الدور (إنجليزي – يستخدم في النظام)</label>
+      <input type="text" id="newRoleId" class="input">
+
+      <label>الاسم العربي للدور</label>
+      <input type="text" id="newRoleNameAr" class="input">
+
+      <div class="modal-actions">
+        <button class="btn btn-primary" type="button" onclick="ohsmsSaveNewRole()">حفظ</button>
+        <button class="btn" type="button" onclick="ohsmsCloseAddRoleModal()">إلغاء</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal hidden" id="editRoleModal">
+    <div class="modal-box wide">
+      <h3>تعديل صلاحيات الدور</h3>
+      <p class="modal-hint">حدد الصلاحيات التي يمتلكها هذا الدور داخل النظام.</p>
+
+      <label>الاسم العربي للدور</label>
+      <input type="text" id="editRoleNameAr" class="input">
+
+      <h4 style="margin-top:16px;">الصلاحيات</h4>
+      <div id="editRolePermsBox"></div>
+
+      <div class="modal-actions">
+        <button class="btn btn-primary" type="button" onclick="ohsmsSaveEditedRole()">حفظ</button>
+        <button class="btn" type="button" onclick="ohsmsCloseEditRoleModal()">إلغاء</button>
+      </div>
+    </div>
+  </div>
+
+
+<<script src="assets/js/system.js"></script>
+script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const user = ohsmsGetCurrentUser();
+
+    if(!user){
+        alert("الرجاء تسجيل الدخول أولاً");
+location.href="/login/";
+
+        return;
+    }
+
+    if(!ohsmsHasPermission("view_system")){
+        alert("غير مصرح لك بالدخول إلى إدارة النظام");
+location.href = "/";
+
+        return;
+    }
+
+});
+</script>
+
+
+</body>
+</html>

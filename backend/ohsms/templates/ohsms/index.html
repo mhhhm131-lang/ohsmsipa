@@ -1,0 +1,161 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>OHSMS – الصفحة الرئيسية للبلاغات</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="{% static 'assets/css/styles.css' %}">
+
+</head>
+<body>
+<header class="top-header">
+  <h1>نظام إدارة السلامة والصحة المهنية – OHSMS</h1>
+  <p>الصفحة الرئيسية – إدخال البلاغات</p>
+</header>
+
+<div class="main-wrapper">
+      
+ <aside class="sidebar">
+<h3>القائمة الرئيسية</h3>
+<a class="nav-link" href="{% url 'home' %}" data-perm="view_home">الصفحة الرئيسية</a>
+<a class="nav-link" href="{% url 'reports' %}" data-perm="view_reports">نظام البلاغات / سجل المتابعة</a>
+<a class="nav-link" href="{% url 'risk' %}" data-perm="view_risks">إدارة المخاطر</a>
+<a class="nav-link" href="awareness.html" data-perm="view_awareness">التوعية والتثقيف</a>
+<a class="nav-link" href="vendors.html" data-perm="view_partners">العملاء والشركاء</a>
+<a class="nav-link" href="{% url 'forms' %}" data-perm="view_forms">النماذج الرقمية</a>
+<a class="nav-link" href="{% url 'dashboard' %}" data-perm="view_dashboard">لوحة التحكم</a>
+<a class="nav-link" href="{% url 'system' %}" data-perm="view_system">إدارة النظام</a>
+
+</aside>
+
+
+
+
+
+
+
+  <main class="content">
+    <section class="card">
+      <h2><span class="emoji">🏠</span>الصفحة الرئيسية للنظام</h2>
+      <p class="hint">هذا هو مركز النظام، يمكنك من خلاله إدخال البلاغات ثم متابعتها من صفحة "نظام البلاغات / سجل المتابعة".</p>
+
+      <div class="grid-3">
+        <div class="info-box info-policy">
+          <strong>السياسة</strong>
+          <p>تلتزم المنشأة بتطبيق أعلى معايير السلامة والصحة المهنية.</p>
+        </div>
+        <div class="info-box info-goals">
+          <strong>الأهداف</strong>
+          <ul style="margin-right:18px;margin-top:4px">
+            <li>تقليل الحوادث المهنية.</li>
+            <li>رفع الوعي بالسلامة.</li>
+            <li>تحسين الالتزام بالتعليمات.</li>
+          </ul>
+        </div>
+        <div class="info-box info-scope">
+          <strong>النطاق</strong>
+          <p>يشمل النظام جميع الفروع والإدارات والأنشطة التشغيلية.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2><span class="emoji">📝</span>إدخال بلاغ جديد</h2>
+      <p class="hint">اختر نوع البلاغ من الأزرار التالية. سيتم حفظ جميع البلاغات في سجل المتابعة.</p>
+      <div class="report-actions">
+  <a href="{% url 'incident_normal' %}" class="btn btn-normal">📄 بلاغ عادي</a>
+  <a href="{% url 'incident_urgent' %}" class="btn btn-urgent">🚨 بلاغ عاجل</a>
+  <a href="{% url 'incident_secret' %}" class="btn btn-secret">🔒 بلاغ سري</a>
+</div>
+
+  
+      <div id="homeMsg" class="success-msg"></div>
+    </section>
+  </main>
+</div>
+
+<!-- مودال بلاغ عادي -->
+<div id="modal-normal" class="modal hidden">
+  <div class="modal-box">
+    <h3>🔵 بلاغ عادي</h3>
+    <p class="modal-hint">يُستخدم للبلاغات العامة التي لا تتطلب سرية أو عاجلية.</p>
+    <label>اسم المبلّغ</label>
+    <input id="n-name" class="input" placeholder="اختياري">
+    <label>وسيلة التواصل (جوال / بريد إلكتروني)</label>
+    <input id="n-contact" class="input" placeholder="اختياري – للتواصل عند الحاجة">
+    <label>الموقع / الجهة / الفرع</label>
+    <input id="n-location" class="input" placeholder="مثال: مبنى رقم 3 – الدور الثاني">
+    <label>نوع الخطر</label>
+    <input id="n-danger" class="input" placeholder="مثال: خطر كهربائي، منزلقات، مواد كيميائية">
+    <label>وصف البلاغ</label>
+    <textarea id="n-desc" class="textarea" placeholder="اكتب هنا تفاصيل البلاغ..."></textarea>
+    <div class="modal-actions">
+      <button class="btn btn-primary" onclick="submitNormal()">إرسال البلاغ</button>
+      <button class="btn btn-secondary" onclick="closeModal()">إغلاق</button>
+    </div>
+  </div>
+</div>
+
+<!-- مودال بلاغ سري -->
+<div id="modal-secret" class="modal hidden">
+  <div class="modal-box">
+    <h3>🟣 بلاغ سري</h3>
+    <p class="modal-hint">لن يتم تسجيل اسمك في النظام، وسيُعامل البلاغ بسرية. الرجاء توضيح سبب اختيار البلاغ السري.</p>
+    <label>الموقع / الجهة / الفرع</label>
+    <input id="s-location" class="input" placeholder="مثال: مستودع المواد – المنطقة الخلفية">
+    <label>وصف البلاغ</label>
+    <textarea id="s-desc" class="textarea" placeholder="اكتب هنا تفاصيل البلاغ..."></textarea>
+    <label>لماذا اخترت أن يكون البلاغ سرياً؟</label>
+    <textarea id="s-reason" class="textarea" placeholder="هذا الحقل إلزامي في البلاغ السري."></textarea>
+    <div class="modal-actions">
+      <button class="btn btn-primary" onclick="submitSecret()">إرسال البلاغ السري</button>
+      <button class="btn btn-secondary" onclick="closeModal()">إغلاق</button>
+    </div>
+  </div>
+</div>
+
+<!-- مودال بلاغ عاجل -->
+<div id="modal-urgent" class="modal hidden">
+  <div class="modal-box">
+    <h3>🔴 بلاغ عاجل</h3>
+    <p class="modal-hint">يُستخدم للحالات الطارئة التي تتطلب تدخلاً فورياً. يمكن تخصيص هذه النافذة لاحقاً لإضافة أزرار اتصال مباشر أو واتساب.</p>
+    <div class="modal-actions">
+      <button class="btn btn-primary" onclick="submitUrgent()">تأكيد تسجيل بلاغ عاجل</button>
+      <button class="btn btn-secondary" onclick="closeModal()">إغلاق</button>
+    </div>
+  </div>
+</div>
+
+<script src="{% static 'assets/js/system.js' %}"></script>
+
+<script>
+
+
+  // إخفاء روابط القائمة حسب صلاحيات المستخدم الحالي
+  
+document.addEventListener("DOMContentLoaded", function () {
+
+  const user = ohsmsGetCurrentUser();
+
+  // إذا مافيه مستخدم، لا نخفي شيء
+  if(!user){
+    return;
+  }
+
+  // إذا فيه مستخدم نبدأ نفحص الصلاحيات
+  var items = document.querySelectorAll("[data-perm]");
+  items.forEach(function (item) {
+    var perm = item.getAttribute("data-perm");
+    if (perm && !ohsmsHasPermission(perm)) {
+      item.style.display = "none";
+    }
+  });
+});
+</script>
+
+<a href="{% url 'secret_track' %}">متابعة بلاغ سري</a>
+
+
+</body>
+</html>

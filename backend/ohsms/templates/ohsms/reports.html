@@ -1,0 +1,307 @@
+{% load static %}
+
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>OHSMS – نظام البلاغات / سجل المتابعة</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <link rel="stylesheet" href="{% static 'assets/css/styles.css' %}">
+ 
+</head>
+<body>
+<header class="top-header">
+  <h1>نظام إدارة السلامة والصحة المهنية – OHSMS</h1>
+  <p>نظام البلاغات – سجل البلاغات ومسار المعالجة (Workflow)</p>
+</header>
+
+<div class="main-wrapper">
+      
+   <aside class="sidebar">
+<h3>القائمة الرئيسية</h3>
+<a class="nav-link" href="{% url 'home' %}" data-perm="view_home">الصفحة الرئيسية</a>
+<a class="nav-link" href="{% url 'reports' %}" data-perm="view_reports">نظام البلاغات / سجل المتابعة</a>
+<a class="nav-link" href="{% url 'risk' %}" data-perm="view_risks">إدارة المخاطر</a>
+
+<a class="nav-link" href="awareness.html" data-perm="view_awareness">التوعية والتثقيف</a>
+<a class="nav-link" href="vendors.html" data-perm="view_partners">العملاء والشركاء</a>
+<a class="nav-link" href="{% url 'forms' %}" data-perm="view_forms">النماذج الرقمية</a>
+<a class="nav-link" href="{% url 'dashboard' %}" data-perm="view_dashboard">لوحة التحكم</a>
+<a class="nav-link" href="{% url 'system' %}" data-perm="view_system">إدارة النظام</a>
+
+</aside>
+
+
+
+  <main class="content">
+    <section class="card">
+      <h2><span class="emoji">📑</span>سجل البلاغات</h2>
+      <p class="hint">يتم عرض جميع البلاغات التي تم إدخالها من الصفحة الرئيسية مع حالة كل بلاغ.</p>
+      <div id="reports-table"></div>
+    </section>
+
+    <section class="card">
+      <h2><span class="emoji">🟢</span>المسار العام لمعالجة البلاغ</h2>
+      <p class="hint">يمثل هذا المخطط المراحل القياسية لمعالجة البلاغات. يتم تحديث حالة كل بلاغ من خلال نافذة "إدارة البلاغ".</p>
+      <div id="timeline-global" class="timeline-container"></div>
+    </section>
+  </main>
+</div>
+
+<!-- نافذة إدارة البلاغ -->
+<div id="reportModal" class="modal hidden">
+  <div class="modal-box wide">
+    <h3>إدارة البلاغ</h3>
+    <p class="modal-hint">استعراض تفاصيل البلاغ وتحديث مسار المعالجة (استلام، إحالة، تحويل، تنفيذ، تصعيد، إغلاق).</p>
+
+  <div class="info-cards">
+
+  <div class="info-card">
+    <div class="ic-icon">🆔</div>
+    <div class="ic-title">رقم البلاغ</div>
+    <div class="ic-value" id="infoId">-</div>
+  </div>
+
+  <div class="info-card">
+    <div class="ic-icon">🏷️</div>
+    <div class="ic-title">نوع البلاغ</div>
+    <div class="ic-value" id="infoType">-</div>
+  </div>
+
+  <div class="info-card">
+    <div class="ic-icon">📅</div>
+    <div class="ic-title">تاريخ الإدخال</div>
+    <div class="ic-value" id="infoCreated">-</div>
+  </div>
+
+  <div class="info-card">
+    <div class="ic-icon">📍</div>
+    <div class="ic-title">الموقع</div>
+    <div class="ic-value" id="infoLocation">-</div>
+  </div>
+
+  <div class="info-card">
+    <div class="ic-icon">📞</div>
+    <div class="ic-title">قناة التواصل</div>
+    <div class="ic-value" id="infoContact">-</div>
+  </div>
+
+  <div class="info-card">
+    <div class="ic-icon">👤</div>
+    <div class="ic-title">اسم المبلغ</div>
+    <div class="ic-value" id="infoName">-</div>
+  </div>
+
+  <div class="info-card">
+    <div class="ic-icon">⚠️</div>
+    <div class="ic-title">نوع الخطر</div>
+    <div class="ic-value" id="infoDanger">-</div>
+  </div>
+
+  <div class="info-card">
+    <div class="ic-icon">👷‍♂️</div>
+    <div class="ic-title">استلام بواسطة</div>
+    <div class="ic-value" id="infoReceivedBy">-</div>
+  </div>
+
+  <div class="info-card">
+    <div class="ic-icon">⏱️</div>
+    <div class="ic-title">وقت الاستلام</div>
+    <div class="ic-value" id="infoReceivedAt">-</div>
+  </div>
+
+  <div class="info-card">
+    <div class="ic-icon">🏢</div>
+    <div class="ic-title">الإحالة للإدارة</div>
+    <div class="ic-value" id="infoAssignedDept">-</div>
+  </div>
+
+  <div class="info-card">
+    <div class="ic-icon">👤</div>
+    <div class="ic-title">اسم منسق السلامة</div>
+    <div class="ic-value" id="infoCoordinator">-</div>
+  </div>
+
+  <div class="info-card">
+    <div class="ic-icon">⏱️</div>
+    <div class="ic-title">وقت الإحالة</div>
+    <div class="ic-value" id="infoAssignedAt">-</div>
+  </div>
+
+  <div class="info-card">
+    <div class="ic-icon">🔧</div>
+    <div class="ic-title">الموظف المنفذ للإجراء</div>
+    <div class="ic-value" id="infoExecutor">-</div>
+  </div>
+
+  <div class="info-card">
+    <div class="ic-icon">➡️</div>
+    <div class="ic-title">وقت تحويل التنفيذ</div>
+    <div class="ic-value" id="infoForwardedAt">-</div>
+  </div>
+
+  <div class="info-card">
+    <div class="ic-icon">✔️</div>
+    <div class="ic-title">وقت تنفيذ الإجراء</div>
+    <div class="ic-value" id="infoDoneAt">-</div>
+  </div>
+
+</div>
+ 
+
+
+
+<div class="info-block">
+  <div class="info-label">نص البلاغ:</div>
+  <div class="info-value" id="infoDesc"></div>
+</div>
+
+<div class="info-block">
+  <div class="info-label">قناة التواصل:</div>
+  <div class="info-value" id="infoContact"></div>
+</div>
+
+
+    <div class="info-block">
+      <div class="info-label">نص البلاغ الأصلي:</div>
+      <div class="info-value" id="infoDesc"></div>
+    </div
+><!-- الخط الزمني الجديد بشكل دوائر -->
+<div class="timeline-container">
+  <h4 class="info-label" style="margin-top:10px;margin-bottom:6px;">
+    مسار معالجة هذا البلاغ:
+  </h4>
+
+  <div id="timeline-modal" class="timeline-wrapper">
+    <!-- يتم تعبئته بالكامل من reports.js / buildTimeline -->
+  </div>
+</div>
+<!-- أزرار الإجراءات الثانوية (التصعيد + التواصل) -->
+<div class="action-card">
+
+  <h4>إجراءات إضافية</h4>
+
+  <div class="action-buttons">
+
+    <button class="btn-escalate2" onclick="actionEscalate()">
+        ⚠️ تصعيد البلاغ
+    </button>
+
+    <button class="btn-contact2" onclick="actionContact()">
+        📞 التواصل مع المبلّغ
+    </button>
+
+  </div>
+
+</div>
+
+
+
+
+
+    <div class="info-block">
+      <div class="info-label">تعليق / ملاحظات المرحلة (حد تقريبي 75 كلمة):</div>
+      <textarea id="commentBox" class="textarea" placeholder="يمكن كتابة ملخص الإجراء أو سبب الإحالة / التصعيد / الإغلاق."></textarea>
+      <div id="historyBox" class="history-box"></div>
+    </div>
+
+    <div class="actions-row" style="margin-top:10px;display:flex;flex-wrap:wrap;gap:6px;">
+      <button class="btn btn-small btn-receive" onclick="actionReceive()">📥 استلام</button>
+      <button class="btn btn-small btn-assign" onclick="actionAssign()">📤 إحالة</button>
+      <button class="btn btn-small btn-forward" onclick="actionForward()">🔄 تحويل للميداني</button>
+      <button class="btn btn-small btn-done" onclick="actionDone()">✅ تم تنفيذ الإجراء</button>
+      <button class="btn btn-small btn-escalate" onclick="actionEscalate()">⚠️ تصعيد</button>
+      <button class="btn btn-small btn-close" onclick="actionCloseCase()">🔒 إغلاق البلاغ</button>
+      <button class="btn btn-small btn-contact" onclick="actionContact()">📞 التواصل مع المبلّغ</button>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeReportModal()">إغلاق النافذة</button>
+    </div>
+  </div>
+</div>
+
+
+<script src="{% static 'assets/js/common.js' %}"></script>
+<script src="{% static 'assets/js/system.js' %}"></script>
+
+<script src="{% static 'assets/js/system.js' %}"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const user = ohsmsGetCurrentUser();
+if(!user){
+    alert("يجب تسجيل الدخول أولاً");
+    location.href = "{% url 'login' %}";
+    return;
+}
+
+
+    if(!ohsmsHasPermission("view_reports")){
+        alert("غير مصرح لك بالدخول إلى سجل المتابعة");
+        location.href = "index.html";
+        return;
+    }
+});
+</script>
+<div id="assignModal" class="modal hidden">
+  <div class="modal-box">
+    <h3>إحالة البلاغ</h3>
+
+    <label>الإدارة المحال إليها</label>
+    <input id="assignDept" class="input" placeholder="مثال: إدارة الصيانة">
+
+    <label>اسم منسق السلامة</label>
+    <input id="assignCoord" class="input" placeholder="مثال: محمد العتيبي">
+
+    <label>ملاحظات (اختياري)</label>
+    <textarea id="assignNote" class="textarea"></textarea>
+
+    <div class="modal-actions">
+      <button class="btn btn-primary" onclick="saveAssign()">حفظ الإحالة</button>
+      <button class="btn btn-secondary" onclick="closeAssignModal()">إلغاء</button>
+    </div>
+  </div>
+</div>
+
+<!-- نافذة ملاحظات المرحلة في التايملاين -->
+<div id="stepNoteModal" class="modal hidden">
+  <div class="modal-box">
+
+    <h3>ملاحظات المرحلة</h3>
+
+    <textarea id="stepNoteInput" placeholder="أضف ملاحظاتك حول هذه المرحلة..."></textarea>
+
+    <div style="display:flex; gap:10px; margin-top:15px;">
+        <button id="saveStepNoteBtn" class="save-note-btn">💾 حفظ</button>
+        <button class="close-note-btn" onclick="closeStepNoteModal()">إغلاق</button>
+    </div>
+
+  </div>
+</div>
+
+</div>
+<!-- نافذة ملاحظات المرحلة -->
+<div id="stepNoteModal" class="modal hidden">
+  <div class="modal-box">
+    <h3 id="stepNoteTitle">ملاحظات المرحلة</h3>
+
+    <textarea
+      id="stepNoteTextarea"
+      class="textarea"
+      placeholder="اكتب ملاحظات هذه المرحلة هنا..."
+      style="min-height:120px"
+    ></textarea>
+
+    <div class="modal-actions">
+      <button class="btn btn-primary" onclick="saveStepNote()">حفظ</button>
+      <button class="btn btn-secondary" onclick="closeStepNoteModal()">إلغاء</button>
+    </div>
+  </div>
+</div>
+
+
+</body>
+
+</html>

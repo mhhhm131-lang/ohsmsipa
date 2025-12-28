@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>بلاغ عادي</title>
+</head>
+<body>
+
+{% if not user.is_authenticated %}
+
+    <h2>📄 بلاغ عادي</h2>
+
+    <p>هذه صفحة البلاغ العادي – لا تظهر إلا بعد تسجيل الدخول.</p>
+
+    <a href="{% url 'login' %}?next={{ request.path }}">
+        🔐 تسجيل الدخول
+    </a>
+
+    <br><br>
+    <a href="/">⬅ العودة للصفحة الرئيسية</a>
+
+{% else %}
+
+    <h2>📄 بلاغ عادي</h2>
+    <p>مرحباً {{ user.username }} 👋</p>
+
+    <form method="post">
+        {% csrf_token %}
+
+        <!-- الفرع -->
+        <label>الفرع:</label><br>
+        <select id="branch" name="branch">
+            <option value="">اختر الفرع</option>
+            {% for branch in branches %}
+                <option value="{{ branch.id }}">{{ branch.name }}</option>
+            {% endfor %}
+        </select>
+
+        <br><br>
+
+        <!-- الإدارة -->
+        <label>الإدارة:</label><br>
+        <select id="department" name="department">
+            <option value="">اختر الإدارة</option>
+        </select>
+
+        <br><br>
+
+        <!-- القسم -->
+        <label>القسم:</label><br>
+        <select id="section" name="section">
+            <option value="">اختر القسم</option>
+        </select>
+
+        <br><br>
+
+        <button type="submit">إرسال البلاغ</button>
+    </form>
+
+    <br>
+    <a href="/">⬅ العودة للصفحة الرئيسية</a>
+
+{% endif %}
+
+<script>
+document.getElementById("branch")?.addEventListener("change", function () {
+    const branchId = this.value;
+    const departmentSelect = document.getElementById("department");
+    const sectionSelect = document.getElementById("section");
+
+    departmentSelect.innerHTML = '<option value="">اختر الإدارة</option>';
+    sectionSelect.innerHTML = '<option value="">اختر القسم</option>';
+
+    if (!branchId) return;
+
+    fetch(`/ajax/departments/?branch_id=${branchId}`)
+        .then(response => response.json())
+        .then(data => {
+            data.forEach(dept => {
+                const option = document.createElement("option");
+                option.value = dept.id;
+                option.textContent = dept.name;
+                departmentSelect.appendChild(option);
+            });
+        });
+});
+
+document.getElementById("department")?.addEventListener("change", function () {
+    const departmentId = this.value;
+    const sectionSelect = document.getElementById("section");
+
+    sectionSelect.innerHTML = '<option value="">اختر القسم</option>';
+
+    if (!departmentId) return;
+
+    fetch(`/ajax/sections/?department_id=${departmentId}`)
+        .then(response => response.json())
+        .then(data => {
+            data.forEach(sec => {
+                const option = document.createElement("option");
+                option.value = sec.id;
+                option.textContent = sec.name;
+                sectionSelect.appendChild(option);
+            });
+        });
+});
+</script>
+
+</body>
+</html>

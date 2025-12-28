@@ -1,0 +1,157 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>OHSMS – لوحة التحكم</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="{% static 'assets/css/styles.css' %}">
+</head>
+<body>
+<header class="top-header">
+  <h1>نظام إدارة السلامة والصحة المهنية – OHSMS</h1>
+  <p>لوحة التحكم – مؤشرات البلاغات والمخاطر والنماذج الرقمية</p>
+</header>
+
+<div class="main-wrapper">
+  
+    <aside class="sidebar">
+<h3>القائمة الرئيسية</h3>
+<a class="nav-link" href="{% url 'home' %}" data-perm="view_home">الصفحة الرئيسية</a>
+<a class="nav-link" href="{% url 'reports' %}" data-perm="view_reports">نظام البلاغات / سجل المتابعة</a>
+<a class="nav-link" href="{% url 'risk' %}" data-perm="view_risks">إدارة المخاطر</a>
+<a class="nav-link" href="{% url 'forms' %}" data-perm="view_forms">النماذج الرقمية</a>
+<a class="nav-link" href="{% url 'dashboard' %}" data-perm="view_dashboard">لوحة التحكم</a>
+<a class="nav-link" href="{% url 'system' %}" data-perm="view_system">إدارة النظام</a>
+
+<a class="nav-link" href="awareness.html" data-perm="view_awareness">التوعية والتثقيف</a>
+<a class="nav-link" href="vendors.html" data-perm="view_partners">العملاء والشركاء</a>
+
+</aside>
+
+
+
+
+  <main class="content">
+    <section class="card">
+      <h2><span class="emoji">🎛️</span> لوحة التحكم العامة</h2>
+      <p class="hint">تعرض هذه اللوحة نظرة سريعة على وضع البلاغات والمخاطر والنماذج الرقمية، مع إمكانية التصفية حسب الفرع والإدارة والقسم.</p>
+
+      <div class="dashboard-filters">
+        <div class="filter-group">
+          <label>الفرع</label>
+          <select id="dashBranch" class="input">
+            <option value="">جميع الفروع</option>
+            <option>المركز الرئيسي</option>
+            <option>فرع الرياض</option>
+            <option>فرع الشرقية</option>
+            <option>فرع الغربية</option>
+            <option>فرع الجنوب</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>الإدارة</label>
+          <select id="dashDept" class="input">
+            <option value="">جميع الإدارات</option>
+            <option>الإدارة العامة</option>
+            <option>إدارة الجودة</option>
+            <option>إدارة التشغيل</option>
+            <option>إدارة الصيانة</option>
+            <option>إدارة السلامة</option>
+            <option>إدارة الموارد البشرية</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>القسم</label>
+          <select id="dashSection" class="input">
+            <option value="">جميع الأقسام</option>
+            <option>قسم 1</option>
+            <option>قسم 2</option>
+            <option>قسم 3</option>
+            <option>قسم السلامة</option>
+            <option>قسم الطوارئ</option>
+            <option>قسم الدعم الفني</option>
+          </select>
+        </div>
+        <div>
+          <button id="dashRefresh" class="btn btn-secondary btn-small">تحديث المؤشرات</button>
+        </div>
+      </div>
+
+      <div class="kpi-grid" id="kpiReports">
+        <!-- KPIs for reports injected by JS -->
+      </div>
+
+      <div class="kpi-grid" id="kpiRisks" style="margin-top:12px;">
+        <!-- KPIs for risks injected by JS -->
+      </div>
+
+      <div class="kpi-grid" id="kpiForms" style="margin-top:12px;">
+        <!-- KPIs for forms injected by JS -->
+      </div>
+    </section>
+
+    <section class="card">
+      <h2><span class="emoji">📊</span> الرسوم والمؤشرات التفصيلية</h2>
+      <p class="hint">يتم احتساب هذه المؤشرات مباشرة من بيانات النظام المخزنة في المتصفح.</p>
+
+      <div class="chart-row">
+        <div class="chart-card">
+          <div class="chart-title">توزيع البلاغات حسب النوع</div>
+          <div class="chart-sub">سري / عاجل / عادي</div>
+          <div id="chartReportsLevel" class="bar-list"></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">توزيع البلاغات حسب الحالة</div>
+          <div class="chart-sub">مراحل سير البلاغ من الإرسال حتى الإغلاق</div>
+          <div id="chartReportsStatus" class="bar-list"></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">توزيع المخاطر حسب شدة التقييم</div>
+          <div class="chart-sub">منخفضة / متوسطة / عالية (حسب حاصل الشدة × الاحتمالية)</div>
+          <div id="chartRisksRating" class="bar-list"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2><span class="emoji">🕒</span> أحدث الأنشطة</h2>
+      <p class="hint">تجمع هذه القائمة آخر التغييرات في البلاغات والمخاطر والنماذج الرقمية (آخر 20 عنصرًا تقريبًا).</p>
+      <div id="activityList" class="activity-list"></div>
+    </section>
+
+  </main>
+</div>
+
+<script src="{% static 'assets/js/reports.js' %}"></script>
+<script src="{% static 'assets/js/risk.js' %}"></script>
+<script src="{% static 'assets/js/forms.js' %}"></script>
+<script src="{% static 'assets/js/dashboard.js' %}"></script>
+<script src="{% static 'assets/js/system.js' %}"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const user = ohsmsGetCurrentUser();
+
+    // إذا ما فيه مستخدم
+    if(!user){
+        alert("الرجاء تسجيل الدخول أولاً");
+location.href = "/login/";
+
+        return;
+    }
+
+    // التحقق من صلاحية لوحة التحكم
+    if(!ohsmsHasPermission("view_dashboard")){
+        alert("غير مصرح لك بالدخول إلى لوحة التحكم");
+location.href = "/";
+
+        return;
+    }
+
+});
+</script>
+
+</body>
+</html>
