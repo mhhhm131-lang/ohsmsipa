@@ -117,14 +117,22 @@ USE_I18N = True
 
 USE_TZ = True
 
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+
+# المكان الحقيقي لملفاتك داخل المشروع
+STATICFILES_DIRS = [
+    BASE_DIR / "ohsms" / "static",
+]
+
+# المكان الذي سيجمع فيه collectstatic الملفات
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
+# WhiteNoise لتقديم الملفات في الإنتاج (Render)
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+
 
 
 # Default primary key field type
