@@ -125,16 +125,16 @@ def urgent_incident(request):
 
     return render(request, "ohsms/incident_urgent.html")
 
-@login_required(login_url='/login/')
+@login_required
 def reports_view(request):
-    # التحقق من دور المستخدم
-    try:
-        role = request.user.profile.role
-    except:
-        return HttpResponse("غير مخوّل", status=403)
+    incidents = Incident.objects.select_related(
+        'branch', 'department', 'section'
+    ).prefetch_related('events').order_by('-created_at')
 
-    if role not in ['system_admin', 'system_staff']:
-        return HttpResponse("غير مخوّل للاطلاع على سجل البلاغات", status=403)
+    return render(request, 'ohsms/reports.html', {
+        'incidents': incidents
+    })
+
 
     incidents = Incident.objects.select_related(
         'branch', 'department', 'section'
