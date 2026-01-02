@@ -1,42 +1,113 @@
-from ohsms.models import Incident, IncidentEvent, Branch, Department, Section
-from ohsms.services.incidents import IncidentService
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, HttpResponse
+from django.views.decorators.csrf import csrf_exempt
+
+from ohsms.models import (
+    Incident, Branch, Department, Section,
+    SystemContent
+)
+from ohsms.services.incidents import IncidentService
 
 
+# =========================
+# Helpers
+# =========================
+def get_user_role(request):
+    """
+    يرجع دور المستخدم من UserProfile
+    """
+    try:
+        return request.user.profile.role
+    except Exception:
+        return None
 
-# الصفحة الرئيسية (عامة)
+
+def require_roles(request, allowed_roles, forbidden_message):
+    """
+    RBAC مع دعم الأدوار العربية المخزنة في قاعدة البيانات
+    """
+    role = get_user_role(request)
+    if not role:
+        return HttpResponse("غير مخوّل", status=403)
+
+    ROLE_MAP = {
+        "مدير النظام": "system_admin",
+        "موظف النظام": "system_staff",
+        "الإدارة العليا": "top_management",
+        "لجنة السلامة": "safety_committee",
+        "مدير فرع": "branch_manager",
+        "مدير إدارة": "department_manager",
+        "مدير قسم": "section_manager",
+        "منسق السلامة": "safety_coordinator",
+        "موظف": "employee",
+        "عميل / مورد / جهة خدمة": "partner",
+    }
+
+    normalized_role = ROLE_MAP.get(role)
+
+    if not normalized_role:
+        return HttpResponse("غير مخوّل", status=403)
+
+    if normalized_role not in allowed_roles:
+        return HttpResponse(forbidden_message, status=403)
+
+    return None
+
+
+# =========================
+# Home
+# =========================
 def home(request):
-    return render(request, 'ohsms/index.html')
+    if not request.user.is_authenticated:
+        return redirect("/login/")
+    return redirect("/dashboard/")
 
 
-# تسجيل الدخول
+# =========================
+# Auth
+# =========================
 def login_view(request):
-    if request.method == 'POST':
-        username = request.POST.get('username')
-        password = request.POST.get('password')
+    if request.method == "POST":
+        username = request.POST.get("username")
+        password = request.POST.get("password")
 
         user = authenticate(request, username=username, password=password)
         if user is not None:
             login(request, user)
-            next_url = request.GET.get('next')
-            return redirect(next_url if next_url else '/')
+
+            try:
+                role = user.profile.role
+            except Exception:
+                logout(request)
+                messages.error(request, "حسابك غير مهيأ (لا يوجد دور مستخدم)")
+                return redirect("/login/")
+
+            next_url = request.POST.get("next") or request.GET.get("next")
+            if next_url:
+                return redirect(next_url)
+
+            if user.is_superuser or role == "مدير النظام":
+                return redirect("/system/")
+            else:
+                return redirect("/dashboard/")
         else:
-            messages.error(request, 'اسم المستخدم أو كلمة المرور غير صحيحة')
+            messages.error(request, "اسم المستخدم أو كلمة المرور غير صحيحة")
 
-    return render(request, 'ohsms/login.html')
+    return render(request, "ohsms/login.html")
 
 
-# تسجيل الخروج
 def logout_view(request):
     logout(request)
-    return redirect('/login/')
+    return redirect("/login/")
 
-# البلاغ العادي (محمي
-@login_required(login_url='/login/')
+
+# =========================
+# Incidents
+# =========================
+@login_required(login_url="/login/")
 def normal_incident(request):
     branches = Branch.objects.all()
 
@@ -59,37 +130,12 @@ def normal_incident(request):
             department=department,
             section=section
         )
-
         return redirect("reports")
 
-    return render(request, 'ohsms/incident_normal.html', {
-        'branches': branches
-    })
+    return render(request, "ohsms/incident_normal.html", {"branches": branches})
 
 
-# AJAX: جلب الإدارات حسب الفرع
-def get_departments(request):
-    branch_id = request.GET.get("branch_id")
-    departments = Department.objects.filter(branch_id=branch_id)
-
-    data = [
-        {"id": dept.id, "name": dept.name}
-        for dept in departments
-    ]
-    return JsonResponse(data, safe=False)
-
-
-# AJAX: جلب الأقسام حسب الإدارة
-def get_sections(request):
-    department_id = request.GET.get("department_id")
-    sections = Section.objects.filter(department_id=department_id)
-
-    data = [
-        {"id": sec.id, "name": sec.name}
-        for sec in sections
-    ]
-    return JsonResponse(data, safe=False)
-
+@login_required(login_url="/login/")
 def secret_incident(request):
     branches = Branch.objects.all()
 
@@ -110,14 +156,11 @@ def secret_incident(request):
             "secret_key": secret_key
         })
 
-    return render(request, "ohsms/incident_secret.html", {
-        "branches": branches
-    })
+    return render(request, "ohsms/incident_secret.html", {"branches": branches})
 
-
-from django.views.decorators.csrf import csrf_exempt
 
 @csrf_exempt
+@login_required(login_url="/login/")
 def urgent_incident(request):
     if request.method == "POST":
         IncidentService.create_urgent_incident()
@@ -125,77 +168,31 @@ def urgent_incident(request):
 
     return render(request, "ohsms/incident_urgent.html")
 
-@login_required(login_url='/login/')
-def reports_view(request):
-    # التحقق من دور المستخدم
-    try:
-        role = request.user.profile.role
-    except:
-        return HttpResponse("غير مخوّل", status=403)
 
-    if role not in ['system_admin', 'system_staff']:
-        return HttpResponse("غير مخوّل للاطلاع على سجل البلاغات", status=403)
+@login_required(login_url="/login/")
+def reports_view(request):
+    denied = require_roles(
+        request,
+        allowed_roles=["system_admin", "system_staff"],
+        forbidden_message="غير مخوّل للاطلاع على سجل البلاغات"
+    )
+    if denied:
+        return denied
 
     incidents = Incident.objects.select_related(
-        'branch', 'department', 'section'
-    ).prefetch_related('events').order_by('-created_at')
+        "branch", "department", "section"
+    ).prefetch_related("events").order_by("-created_at")
 
-    return render(request, 'ohsms/reports.html', {
-        'incidents': incidents
-    })
+    return render(request, "ohsms/reports.html", {"incidents": incidents})
 
 
-from .models import SystemContent
-
-
-def home(request):
-    contents = {
-        item.content_type: item
-        for item in SystemContent.objects.filter(is_active=True)
-    }
-
-    return render(request, 'ohsms/index.html', {
-        'policy': contents.get('policy'),
-        'objectives': contents.get('objectives'),
-        'scope': contents.get('scope'),
-    })
-from django.shortcuts import render
-from ohsms.models import Incident
-
-
-
-from django.shortcuts import redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
-from ohsms.models import Incident
-from ohsms.services.incidents import IncidentService
-
-
-
-from django.shortcuts import render
-
-def risk_view(request):
-    return render(request, "ohsms/risk.html")
-from django.shortcuts import render
-
-def forms_view(request):
-    return render(request, "ohsms/forms.html")
-
-def dashboard_view(request):
-    return render(request, "ohsms/dashboard.html")
-
-def system_view(request):
-    return render(request, "ohsms/admin.html")
-
-from django.shortcuts import get_object_or_404
-from django.http import JsonResponse
-
-@login_required
+@login_required(login_url="/login/")
 def change_incident_status(request, incident_id):
-    if request.method != 'POST':
-        return JsonResponse({'error': 'Invalid request'}, status=400)
+    if request.method != "POST":
+        return JsonResponse({"error": "Invalid request"}, status=400)
 
-    new_status = request.POST.get('status')
-    note = request.POST.get('note', '')
+    new_status = request.POST.get("status")
+    note = request.POST.get("note", "")
 
     incident = get_object_or_404(Incident, id=incident_id)
 
@@ -206,7 +203,9 @@ def change_incident_status(request, incident_id):
         note=note
     )
 
-    return JsonResponse({'success': True})
+    return JsonResponse({"success": True})
+
+
 def secret_track(request):
     incident = None
     error = None
@@ -220,10 +219,8 @@ def secret_track(request):
                 secret_key=key,
                 incident_type="secret"
             )
-
             if incident.status == "closed":
                 closed = True
-
         except Incident.DoesNotExist:
             error = "مفتاح المتابعة غير صحيح"
 
@@ -234,5 +231,69 @@ def secret_track(request):
     })
 
 
+# =========================
+# Risk / Forms / Dashboard / System
+# =========================
+@login_required(login_url="/login/")
+def risk_view(request):
+    denied = require_roles(
+        request,
+        allowed_roles=[
+            "system_admin",
+            "system_staff",
+            "safety_committee",
+            "branch_manager",
+            "department_manager",
+            "section_manager",
+            "safety_coordinator",
+        ],
+        forbidden_message="غير مخوّل للوصول إلى إدارة المخاطر"
+    )
+    if denied:
+        return denied
+
+    return render(request, "ohsms/risk.html")
 
 
+@login_required(login_url="/login/")
+def forms_view(request):
+    return render(request, "ohsms/forms.html")
+
+
+@login_required(login_url="/login/")
+def dashboard_view(request):
+    return render(request, "ohsms/dashboard.html")
+
+
+@login_required(login_url="/login/")
+def system_view(request):
+    denied = require_roles(
+        request,
+        allowed_roles=["system_admin", "system_staff"],
+        forbidden_message="غير مخوّل للوصول إلى إدارة النظام"
+    )
+    if denied:
+        return denied
+
+    return render(request, "ohsms/admin.html")
+
+
+# =========================
+# AJAX
+# =========================
+@login_required(login_url="/login/")
+def get_departments(request):
+    branch_id = request.GET.get("branch_id")
+    departments = Department.objects.filter(branch_id=branch_id)
+
+    data = [{"id": dept.id, "name": dept.name} for dept in departments]
+    return JsonResponse(data, safe=False)
+
+
+@login_required(login_url="/login/")
+def get_sections(request):
+    department_id = request.GET.get("department_id")
+    sections = Section.objects.filter(department_id=department_id)
+
+    data = [{"id": sec.id, "name": sec.name} for sec in sections]
+    return JsonResponse(data, safe=False)

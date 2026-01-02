@@ -6,9 +6,7 @@
 <title>الدخول للنظام – OHSMS</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-
 <style>
-/* خلفية حكومية */
 body{
   background:#f1f5f9;
   font-family:"Tajawal",sans-serif;
@@ -16,8 +14,6 @@ body{
   padding:0;
   color:#1e293b;
 }
-
-/* صندوق الدخول */
 .login-container{
   max-width:380px;
   margin:70px auto;
@@ -27,15 +23,11 @@ body{
   box-shadow:0 8px 30px rgba(0,0,0,.08);
   border-top:5px solid #0b3d90;
 }
-
-/* عنوان */
 .login-container h2{
   margin:0;
   color:#0b3d90;
   font-size:22px;
 }
-
-/* الحقول */
 .login-container input{
   width:100%;
   padding:12px;
@@ -43,8 +35,6 @@ body{
   border:1px solid #cbd5e1;
   border-radius:6px;
 }
-
-/* زر */
 .login-container button{
   width:100%;
   padding:12px;
@@ -55,13 +45,10 @@ body{
   border-radius:6px;
   cursor:pointer;
   font-size:16px;
-  transition:.2s;
 }
 .login-container button:hover{
   background:#0a3377;
 }
-
-/* ملاحظة */
 .login-small{
   font-size:13px;
   color:#475569;
@@ -76,50 +63,48 @@ body{
   width:120px;
   opacity:.9;
 }
+.error{
+  color:#b91c1c;
+  margin-top:10px;
+  font-size:14px;
+}
 </style>
-
 </head>
+
 <body>
 
 <div class="login-container">
-  
+
   <div class="gov-logo">
-    <img src="assets/img/logo.png" alt="logo"> 
+    <img src="{% static 'assets/img/logo.png' %}" alt="logo">
   </div>
 
   <h2>الدخول إلى نظام OHSMS</h2>
   <p style="margin-top:8px;color:#475569">فضلاً أدخل بيانات الدخول</p>
 
- <form id="loginForm">
+  <form method="post" action="/login/">
+    {% csrf_token %}
 
-  <label>اسم المستخدم</label>
-  <input id="username" name="username" placeholder="admin">
+    <label>اسم المستخدم</label>
+    <input name="username" required>
 
-  <label style="margin-top:12px;">كلمة المرور</label>
-  <input id="password" name="password" type="password" placeholder="كلمة المرور">
+    <label style="margin-top:12px;">كلمة المرور</label>
+    <input name="password" type="password" required>
 
-  <button type="submit">تسجيل الدخول</button>
+    <button type="submit">تسجيل الدخول</button>
 
-  <div class="login-small" style="margin-top:12px;">
-    حسابات تجريبية: admin / system / employee  
-    كلمة المرور = 1234
-  </div>
+    {% if messages %}
+      {% for message in messages %}
+        <div class="error">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
 
-</form>
+    <div class="login-small">
+      استخدم بيانات حسابك المؤسسي
+    </div>
+  </form>
 
 </div>
-
-<script src="{% static 'assets/js/system.js' %}"></script>
-
-<script>
-document.addEventListener("DOMContentLoaded",function(){
-  var form=document.getElementById('loginForm');
-  form.addEventListener('submit',function(e){
-    e.preventDefault();
-    ohsmsHandleLogin(form,'ar');
-  });
-});
-</script>
 
 </body>
 </html>
