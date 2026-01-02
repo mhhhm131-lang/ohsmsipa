@@ -91,10 +91,9 @@ def login_view(request):
 
             if user.is_superuser or role == "مدير النظام":
                 return redirect("/system/")
-            else:
-                return redirect("/dashboard/")
-        else:
-            messages.error(request, "اسم المستخدم أو كلمة المرور غير صحيحة")
+            return redirect("/dashboard/")
+
+        messages.error(request, "اسم المستخدم أو كلمة المرور غير صحيحة")
 
     return render(request, "ohsms/login.html")
 
@@ -169,6 +168,9 @@ def urgent_incident(request):
     return render(request, "ohsms/incident_urgent.html")
 
 
+# =========================
+# Reports
+# =========================
 @login_required(login_url="/login/")
 def reports_view(request):
     denied = require_roles(
