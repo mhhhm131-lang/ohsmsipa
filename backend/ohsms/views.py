@@ -307,3 +307,42 @@ def get_sections(request):
 
     data = [{"id": sec.id, "name": sec.name} for sec in sections]
     return JsonResponse(data, safe=False)
+from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse
+import json
+
+from ohsms.services.incidents import IncidentService
+
+
+@csrf_exempt
+def api_create_secret_incident(request):
+    if request.method != "POST":
+        return JsonResponse({"error": "Invalid request"}, status=400)
+
+    try:
+        data = json.loads(request.body)
+
+        title = data.get("title", "بلاغ سري")
+        description = data.get("description")
+        secrecy_reason = data.get("secrecy_reason")
+
+        if not description or not secrecy_reason:
+            return JsonResponse(
+                {"error": "البيانات غير مكتملة"},
+                status=400
+            )
+
+        incident, secret_key = IncidentService.create_secret_incident(
+            title=title,
+            description=description,
+            secrecy_reason=secrecy_reason
+        )
+
+        return JsonResponse({
+            "success": True,
+            "incident_number": incident.number,
+            "secret_key": secret_key
+        })
+
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)

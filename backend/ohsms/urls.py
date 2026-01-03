@@ -29,3 +29,5 @@ urlpatterns = [
     path("ajax/departments/", views.get_departments, name="get_departments"),
     path("ajax/sections/", views.get_sections, name="get_sections"),
 ]
+# API – البلاغات
+path("api/incidents/secret/", views.api_create_secret_incident, name="api_secret_incident"),

@@ -61,13 +61,26 @@
     </section>
 
     <section class="card">
-      <h2><span class="emoji">📝</span>إدخال بلاغ جديد</h2>
-      <p class="hint">اختر نوع البلاغ من الأزرار التالية. سيتم حفظ جميع البلاغات في سجل المتابعة.</p>
-      <div class="report-actions">
-  <a href="{% url 'incident_normal' %}" class="btn btn-normal">📄 بلاغ عادي</a>
-  <a href="{% url 'incident_urgent' %}" class="btn btn-urgent">🚨 بلاغ عاجل</a>
-  <a href="{% url 'incident_secret' %}" class="btn btn-secret">🔒 بلاغ سري</a>
-</div>
+  <h2><span class="emoji">📝</span>إدخال بلاغ جديد</h2>
+  <p class="hint">اختر نوع البلاغ من الأزرار التالية. سيتم حفظ جميع البلاغات في سجل المتابعة.</p>
+
+  <div class="report-actions">
+    <!-- بلاغ عادي: يتطلب تسجيل دخول -->
+    <button type="button" class="btn btn-normal" onclick="openNormalModal()">
+      📄 بلاغ عادي
+    </button>
+
+    <!-- بلاغ عاجل: بدون تسجيل دخول -->
+    <button type="button" class="btn btn-urgent" onclick="openUrgentModal()">
+      🚨 بلاغ عاجل
+    </button>
+
+    <!-- بلاغ سري: بدون تسجيل دخول -->
+    <button type="button" class="btn btn-secret" onclick="openSecretModal()">
+      🔒 بلاغ سري
+    </button>
+  </div>
+</section>
 
   
       <div id="homeMsg" class="success-msg"></div>
