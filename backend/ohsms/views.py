@@ -62,9 +62,15 @@ def require_roles(request, allowed_roles, forbidden_message):
 # Home
 # =========================
 def home(request):
-    if not request.user.is_authenticated:
-        return redirect("/login/")
-    return redirect("/dashboard/")
+    """
+    الصفحة الرئيسية:
+    - سياسة السلامة
+    - النطاق
+    - الأهداف
+    - أزرار البلاغات
+    """
+    return render(request, "ohsms/home.html")
+
 
 
 # =========================
