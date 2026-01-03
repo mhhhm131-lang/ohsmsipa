@@ -26,9 +26,10 @@ def get_user_role(request):
 
 
 def require_roles(request, allowed_roles, forbidden_message):
-    """
-    RBAC مع دعم الأدوار العربية المخزنة في قاعدة البيانات
-    """
+    # السماح الكامل لمدير النظام (Superuser)
+    if request.user.is_superuser:
+        return None
+
     role = get_user_role(request)
     if not role:
         return HttpResponse("غير مخوّل", status=403)
@@ -47,7 +48,6 @@ def require_roles(request, allowed_roles, forbidden_message):
     }
 
     normalized_role = ROLE_MAP.get(role)
-
     if not normalized_role:
         return HttpResponse("غير مخوّل", status=403)
 
@@ -55,6 +55,7 @@ def require_roles(request, allowed_roles, forbidden_message):
         return HttpResponse(forbidden_message, status=403)
 
     return None
+
 
 
 # =========================
