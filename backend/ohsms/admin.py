@@ -1,18 +1,31 @@
 from django.contrib import admin
-from .models import (
-    Branch, Department, Section,
-    Incident,
-    UserProfile,
+from django.core.exceptions import ValidationError
 
+from .models import (
+    # Organization
+    Branch, Department, Section,
+
+    # Incidents
+    Incident, IncidentEvent,
+
+    # Users & RBAC
+    UserProfile, Role, UserRole,
+
+    # Risk Management
     RiskCategory, RiskSubCategory, RiskCause,
     AffectedGroup, Risk, RiskNote,
 
-    FormTemplate, FormField, FormSubmission, FormAnswer
+    # Digital Forms
+    FormTemplate, FormField, FormSubmission, FormAnswer,
+
+    # Audit
+    AuditLog
 )
 
 # =========================
 # Organization Structure
 # =========================
+
 @admin.register(Branch)
 class BranchAdmin(admin.ModelAdmin):
     list_display = ("name",)
@@ -33,6 +46,7 @@ class SectionAdmin(admin.ModelAdmin):
 # =========================
 # Incidents
 # =========================
+
 @admin.register(Incident)
 class IncidentAdmin(admin.ModelAdmin):
     list_display = ("title", "incident_type", "status", "created_at")
@@ -40,9 +54,16 @@ class IncidentAdmin(admin.ModelAdmin):
     search_fields = ("title", "description")
 
 
+@admin.register(IncidentEvent)
+class IncidentEventAdmin(admin.ModelAdmin):
+    list_display = ("incident", "action", "from_status", "to_status", "created_at")
+    list_filter = ("action", "created_at")
+
+
 # =========================
 # Risk Management
 # =========================
+
 @admin.register(RiskCategory)
 class RiskCategoryAdmin(admin.ModelAdmin):
     list_display = ("name",)
@@ -80,6 +101,7 @@ class RiskNoteAdmin(admin.ModelAdmin):
 # =========================
 # Digital Forms
 # =========================
+
 @admin.register(FormTemplate)
 class FormTemplateAdmin(admin.ModelAdmin):
     list_display = ("title", "visibility", "is_active", "created_at")
@@ -103,6 +125,74 @@ class FormAnswerAdmin(admin.ModelAdmin):
 
 
 # =========================
-# Users
+# RBAC - Roles & Scopes
 # =========================
-admin.site.register(UserProfile)
+
+@admin.register(Role)
+class RoleAdmin(admin.ModelAdmin):
+    list_display = ("name", "code", "scope_level", "is_global")
+    list_filter = ("scope_level", "is_global")
+    search_fields = ("name", "code")
+
+
+@admin.register(UserRole)
+class UserRoleAdmin(admin.ModelAdmin):
+    list_display = ("user", "role", "branch", "department", "section", "assigned_at")
+    list_filter = ("role", "branch", "department")
+    search_fields = ("user__username",)
+
+    def save_model(self, request, obj, form, change):
+        """
+        فرض قواعد النطاق عند الحفظ من Admin
+        """
+        try:
+            obj.full_clean()
+        except ValidationError as e:
+            form.add_error(None, e)
+            return
+        super().save_model(request, obj, form, change)
+
+
+@admin.register(UserProfile)
+class UserProfileAdmin(admin.ModelAdmin):
+    list_display = ("user", "role", "branch", "department", "section", "is_active")
+    list_filter = ("role", "is_active", "branch")
+    search_fields = ("user__username",)
+
+
+# =========================
+# Audit Log
+# =========================
+
+@admin.register(AuditLog)
+class AuditLogAdmin(admin.ModelAdmin):
+    list_display = ("created_at", "user", "action", "model_name", "object_id")
+    list_filter = ("action", "model_name", "created_at")
+    search_fields = ("user__username", "model_name", "object_id")
+    readonly_fields = (
+        "user", "action", "model_name",
+        "object_id", "description",
+        "ip_address", "created_at"
+    )
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+from .models import SystemContent
+
+# =========================
+# System Content
+# =========================
+
+from .models import SystemContent
+
+@admin.register(SystemContent)
+class SystemContentAdmin(admin.ModelAdmin):
+    list_display = ("content_type", "title", "is_active", "updated_at")
+    list_filter = ("content_type", "is_active")
+    search_fields = ("title", "body")
