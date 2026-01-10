@@ -128,9 +128,10 @@ class FormAnswerAdmin(admin.ModelAdmin):
 
 @admin.register(Role)
 class RoleAdmin(admin.ModelAdmin):
-    list_display = ("name", "code", "scope_level", "is_global")
-    list_filter = ("scope_level", "is_global")
+    list_display = ("name", "code", "is_global")
+    list_filter = ("is_global",)
     search_fields = ("name", "code")
+
 
 
 @admin.register(UserRole)
