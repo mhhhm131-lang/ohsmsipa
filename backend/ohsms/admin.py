@@ -18,8 +18,6 @@ from .models import (
     # Digital Forms
     FormTemplate, FormField, FormSubmission, FormAnswer,
 
-    # Audit
-    AuditLog
 )
 
 # =========================
@@ -160,30 +158,7 @@ class UserProfileAdmin(admin.ModelAdmin):
     search_fields = ("user__username",)
 
 
-# =========================
-# Audit Log
-# =========================
 
-@admin.register(AuditLog)
-class AuditLogAdmin(admin.ModelAdmin):
-    list_display = ("created_at", "user", "action", "model_name", "object_id")
-    list_filter = ("action", "model_name", "created_at")
-    search_fields = ("user__username", "model_name", "object_id")
-    readonly_fields = (
-        "user", "action", "model_name",
-        "object_id", "description",
-        "ip_address", "created_at"
-    )
-
-    def has_add_permission(self, request):
-        return False
-
-    def has_change_permission(self, request, obj=None):
-        return False
-
-    def has_delete_permission(self, request, obj=None):
-        return False
-from .models import SystemContent
 
 # =========================
 # System Content
