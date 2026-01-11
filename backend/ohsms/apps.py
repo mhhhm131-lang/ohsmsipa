@@ -9,9 +9,9 @@ class OhsmsConfig(AppConfig):
     def ready(self):
         User = get_user_model()
 
-        username = os.getenv("DJANGO_SUPERUSER_USERNAME", "admin")
-        password = os.getenv("DJANGO_SUPERUSER_PASSWORD", "Admin@123")
-        email = os.getenv("DJANGO_SUPERUSER_EMAIL", "admin@example.com")
+        username = "admin"
+        password = "Admin@123"
+        email = "admin@example.com"
 
         if not User.objects.filter(username=username).exists():
             User.objects.create_superuser(
