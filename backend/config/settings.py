@@ -15,7 +15,7 @@ SECRET_KEY = os.getenv(
     "django-insecure-change-this-in-production"
 )
 
-DEBUG = os.getenv("DEBUG", "False").lower() == "true"
+DEBUG = True
 
 ALLOWED_HOSTS = [
     h.strip()
