@@ -82,8 +82,12 @@ body{
   <h2>الدخول إلى نظام OHSMS</h2>
   <p style="margin-top:8px;color:#475569">فضلاً أدخل بيانات الدخول</p>
 
-  <form method="post" action="/login/">
+  <form method="post">
     {% csrf_token %}
+
+    {% if next %}
+      <input type="hidden" name="next" value="{{ next }}">
+    {% endif %}
 
     <label>اسم المستخدم</label>
     <input name="username" required>
