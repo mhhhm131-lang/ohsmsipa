@@ -1,6 +1,3 @@
-from ohsms.models import AuditLog
-
-
 class AuditLogService:
     """
     خدمة مركزية لتسجيل الأحداث (Audit Trail)
@@ -19,6 +16,9 @@ class AuditLogService:
         """
         إنشاء سجل تدقيق جديد
         """
+
+        # ✅ استيراد متأخر لتفادي مشكلة Circular / Early Import
+        from ohsms.models import AuditLog
 
         AuditLog.objects.create(
             user=user,
