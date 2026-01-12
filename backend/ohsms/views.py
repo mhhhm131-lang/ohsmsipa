@@ -26,18 +26,34 @@ def get_user_role(request):
 
 
 def require_roles(request, allowed_roles, forbidden_message):
+    """
+    توحيد التحقق من الصلاحيات باستخدام PermissionService
+    مع دعم الأنظمة القديمة (UserProfile) كحل مؤقت
+    """
+    from ohsms.services.permissions import PermissionService
+
+    # السماح المطلق للسوبر يوزر
     if request.user.is_superuser:
         return None
 
-    role = get_user_role(request)
+    # ✅ النظام الجديد (UserRole + PermissionService)
+    for role_code in allowed_roles:
+        if PermissionService.has_role(request.user, role_code):
+            return None
 
-    if not role:
-        return render(
-            request,
-            "ohsms/403.html",
-            {"message": "حسابك مسجّل دخول لكنه غير مهيأ بصلاحيات"},
-            status=403
-        )
+    # 🟡 fallback مؤقت للنظام القديم (UserProfile)
+    if hasattr(request.user, "profile"):
+        profile_role = request.user.profile.role
+        if profile_role in allowed_roles:
+            return None
+
+    # ❌ غير مخوّل
+    return render(
+        request,
+        "ohsms/403.html",
+        {"message": forbidden_message},
+        status=403
+    )
 
     ROLE_MAP = {
         "مدير النظام": "system_admin",
