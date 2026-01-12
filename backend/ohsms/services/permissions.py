@@ -1,13 +1,18 @@
-from ohsms.models import UserRole
+from ohsms.models import UserRole, Branch, Department, Section, UserProfile
 
 
 class PermissionService:
+    """
+    Scope + RBAC Engine
+    مصدر الحقيقة للصلاحيات داخل النظام
+    """
+
+    # =========================
+    # Role checks
+    # =========================
 
     @staticmethod
     def has_role(user, role_code: str) -> bool:
-        """
-        هل لدى المستخدم هذا الدور؟
-        """
         return UserRole.objects.filter(
             user=user,
             role__code=role_code
@@ -16,7 +21,7 @@ class PermissionService:
     @staticmethod
     def is_global(user) -> bool:
         """
-        هل لدى المستخدم دور عالمي؟
+        دور عالمي (System Admin / System Staff)
         """
         return UserRole.objects.filter(
             user=user,
@@ -24,10 +29,36 @@ class PermissionService:
         ).exists()
 
     @staticmethod
-    def has_scope(user, branch=None, department=None, section=None) -> bool:
+    def is_system_admin(user) -> bool:
+        return PermissionService.has_role(user, "system_admin")
+
+    # =========================
+    # Scope resolution
+    # =========================
+
+    @staticmethod
+    def get_user_scopes(user):
         """
-        هل لدى المستخدم صلاحية ضمن هذا النطاق؟
+        إرجاع كل نطاقات المستخدم
         """
+        return UserRole.objects.filter(user=user)
+
+    @staticmethod
+    def has_scope(
+    user,
+    branch=None,
+    department=None,
+    section=None
+) -> bool:
+
+        """
+        التحقق من أن المستخدم ضمن هذا النطاق
+        """
+
+        # صلاحية مطلقة
+        if PermissionService.is_global(user):
+            return True
+
         qs = UserRole.objects.filter(user=user)
 
         if section:
@@ -39,13 +70,26 @@ class PermissionService:
 
         return qs.exists()
 
+    # =========================
+    # Unified access check
+    # =========================
+
     @staticmethod
-    def can_access(user, role_code=None, branch=None, department=None, section=None) -> bool:
+    def can_access(
+    user,
+    *,
+    role_code: str = None,
+    branch=None,
+    department=None,
+    section=None
+) -> bool:
+
         """
         التحقق النهائي:
         - Global role
-        - أو Role + Scope
+        - Role + Scope
         """
+
         if PermissionService.is_global(user):
             return True
 
@@ -61,66 +105,18 @@ class PermissionService:
         elif branch:
             qs = qs.filter(branch=branch)
 
-        return qs.exists()
-    from ohsms.models import UserProfile, Branch, Department, Section
-
-
-class PermissionService:
-    """
-    منطق مركزي للتحقق من الصلاحيات داخل النظام
-    """
-
-    @staticmethod
-    def is_system_admin(user) -> bool:
-        """
-        مدير النظام = صلاحيات مطلقة
-        """
-        if not hasattr(user, 'profile'):
-            return False
-        return user.profile.role == 'system_admin'
-
-    @staticmethod
-    def can_manage_system(user) -> bool:
-        """
-        من يحق له إدارة النظام (مدير النظام + موظفي النظام)
-        """
-        if not hasattr(user, 'profile'):
-            return False
-
-        return user.profile.role in [
-            'system_admin',
-            'system_staff',
-        ]
-
-    @staticmethod
-    def has_scope_access(
-        user,
-        branch: Branch = None,
-        department: Department = None,
-        section: Section = None
-    ) -> bool:
-        """
-        التحقق من النطاق (فرع / إدارة / قسم)
-        """
-
-        # مدير النظام يرى كل شيء
-        if PermissionService.is_system_admin(user):
+        if qs.exists():
             return True
 
-        if not hasattr(user, 'profile'):
-            return False
+        # fallback مؤقت لـ UserProfile (للأنظمة القديمة)
+        if hasattr(user, "profile"):
+            profile = user.profile
 
-        profile = user.profile
-
-        # التحقق حسب أضيق نطاق متوفر
-        if section and profile.section:
-            return profile.section_id == section.id
-
-        if department and profile.department:
-            return profile.department_id == department.id
-
-        if branch and profile.branch:
-            return profile.branch_id == branch.id
+            if section and profile.section_id == section.id:
+                return True
+            if department and profile.department_id == department.id:
+                return True
+            if branch and profile.branch_id == branch.id:
+                return True
 
         return False
-
