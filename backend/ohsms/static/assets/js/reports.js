@@ -831,3 +831,4 @@ function refreshStepNoteIndicators(){
     }
   });
 }
+// frontend-test
