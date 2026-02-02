@@ -9,7 +9,7 @@ from django.db.models import Q
 import json
 
 from ohsms.models import Incident, IncidentEvent, Risk, Branch, Department, Section
-from ohsms.services.IncidentService import IncidentService
+from ohsms.services.incident_service import IncidentService
 from ohsms.services.audit_log import AuditLogService
 from ohsms.services.permissions import PermissionService
 
