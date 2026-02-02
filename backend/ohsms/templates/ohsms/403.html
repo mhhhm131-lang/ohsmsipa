@@ -1,0 +1,43 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>403 – غير مصرح</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" href="{% static 'assets/css/styles.css' %}">
+</head>
+<body>
+
+{% include "ohsms/partials/header.html" %}
+
+
+<div class="main-wrapper">
+    <main class="content">
+        <section class="card" style="max-width:520px;margin:auto;text-align:center;">
+            <h2 style="color:#b91c1c;">🚫 غير مصرح لك بالدخول</h2>
+
+            <p class="hint" style="margin-top:10px;">
+                ليس لديك الصلاحية اللازمة للوصول إلى هذه الصفحة.
+            </p>
+
+            {% if message %}
+                <p class="hint">{{ message }}</p>
+            {% endif %}
+
+            <div style="margin-top:20px;display:flex;justify-content:center;gap:10px;flex-wrap:wrap;">
+                <a href="{% url 'home' %}" class="btn btn-primary">
+                    ⬅ العودة للصفحة الرئيسية
+                </a>
+
+                <a href="{% url 'login' %}" class="btn btn-secondary">
+                    🔐 تسجيل الدخول بحساب آخر
+                </a>
+            </div>
+        </section>
+    </main>
+</div>
+
+</body>
+</html>

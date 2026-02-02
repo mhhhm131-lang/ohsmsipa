@@ -1,0 +1,180 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>تفاصيل البلاغ</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{% static 'assets/css/styles.css' %}">
+</head>
+<body>
+
+{% include "ohsms/partials/header.html" %}
+
+<div class="main-wrapper">
+
+  {% include "ohsms/partials/sidebar.html" %}
+
+  <main class="content">
+
+    <section class="card">
+      <h2>📄 تفاصيل البلاغ</h2>
+
+      <ul>
+        <li><strong>العنوان:</strong> {{ incident.title }}</li>
+        <li><strong>النوع:</strong> {{ incident.get_incident_type_display }}</li>
+        <li><strong>الحالة:</strong> {{ incident.get_status_display }}</li>
+        <li><strong>الفرع:</strong> {{ incident.branch }}</li>
+        <li><strong>الإدارة:</strong> {{ incident.department }}</li>
+        <li><strong>القسم:</strong> {{ incident.section }}</li>
+        <li><strong>تاريخ الإنشاء:</strong> {{ incident.created_at }}</li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <h3>⚙️ إجراءات البلاغ</h3>
+
+      <!-- استلام البلاغ -->
+      <form method="post" action="{% url 'incident_receive' incident.id %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-secondary">📥 استلام البلاغ</button>
+      </form>
+
+      <br>
+            {% if incident.status == "assigned" and incident.assigned_to == user %}
+      <form method="post" action="{% url 'incident_accept_assignment' incident.id %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-warning">
+          📥 استلام الإحالة
+        </button>
+      </form>
+
+      <br>
+      {% endif %}
+
+
+      <!-- بدء المعالجة -->
+      <form method="post" action="{% url 'incident_start_progress' incident.id %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-secondary">▶️ بدء المعالجة</button>
+      </form>
+    </section>
+
+    <section class="card">
+      <h4>➕ إضافة ملاحظة</h4>
+      <form method="post" action="{% url 'incident_add_note' incident.id %}">
+        {% csrf_token %}
+        <textarea name="note" rows="3" required class="textarea"></textarea><br><br>
+        <button type="submit" class="btn btn-primary">إضافة ملاحظة</button>
+      </form>
+    </section>
+
+    <section class="card">
+      <h4>📤 إحالة البلاغ</h4>
+      <form method="post" action="{% url 'assign_incident' incident.id %}">
+        {% csrf_token %}
+
+        <label>إحالة إلى:</label><br>
+        <select name="assignee" required class="input">
+          <option value="">-- اختر مستخدم --</option>
+          {% for user in users %}
+            <option value="{{ user.id }}">{{ user.username }}</option>
+          {% endfor %}
+        </select>
+
+        <br><br>
+
+        <label>ملاحظة (اختياري):</label><br>
+        <textarea name="note" rows="3" class="textarea"></textarea>
+
+        <br><br>
+        <button type="submit" class="btn btn-primary">إحالة البلاغ</button>
+      </form>
+    </section>
+
+    <section class="card">
+      <h4>🔗 ربط البلاغ بسجل المخاطر</h4>
+
+      <form method="post" action="{% url 'incident_link_risk' incident.id %}">
+        {% csrf_token %}
+
+        <label>الخطر من السجل العام:</label><br>
+        <select name="risk_id" class="input">
+          <option value="">-- اختر خطر --</option>
+          {% for risk in risks %}
+            <option value="{{ risk.id }}"
+              {% if incident.risk and incident.risk.id == risk.id %}selected{% endif %}>
+              {{ risk.title }}
+            </option>
+          {% endfor %}
+        </select>
+
+        <br><br>
+        <button type="submit" class="btn btn-secondary">ربط بالخطر</button>
+      </form>
+
+      {% if incident.risk %}
+        <p><strong>الخطر المرتبط حاليًا:</strong> {{ incident.risk.title }}</p>
+      {% endif %}
+    </section>
+
+    <section class="card">
+      <h4>🔒 القرار الإداري</h4>
+
+      <form method="post" action="{% url 'incident_close' incident.id %}" style="margin-bottom:10px;">
+        {% csrf_token %}
+        <textarea name="note" rows="2" class="textarea" placeholder="ملاحظة الإغلاق (اختياري)"></textarea><br><br>
+        <button type="submit" class="btn btn-danger">إغلاق البلاغ</button>
+      </form>
+
+      <form method="post" action="{% url 'incident_escalate' incident.id %}">
+        {% csrf_token %}
+        <textarea name="note" rows="2" class="textarea" placeholder="سبب التصعيد (اختياري)"></textarea><br><br>
+        <button type="submit" class="btn btn-warning">تصعيد البلاغ</button>
+      </form>
+    </section>
+
+    <section class="card">
+      <h3>🕓 سجل المتابعة</h3>
+      <ul>
+        {% for event in events %}
+          <li>
+            <strong>{{ event.created_at }}</strong> |
+            {{ event.get_action_display }} |
+            بواسطة: {{ event.actor }}
+            {% if event.note %}
+              <br>ملاحظة: {{ event.note }}
+            {% endif %}
+          </li>
+        {% empty %}
+          <li>لا توجد أحداث مسجلة</li>
+        {% endfor %}
+      </ul>
+    </section>
+
+    <a href="{% url 'incidents_dashboard' %}">⬅ العودة إلى القائمة</a>
+
+  </main>
+</div>
+{% if incident.status == "pending_reporter_confirmation" and user == incident.reporter %}
+<section class="card">
+  <h4>تأكيد إغلاق البلاغ</h4>
+
+  <form method="post" action="{% url 'incident_approve_close' incident.id %}">
+    {% csrf_token %}
+    <button type="submit">✅ أوافق على الإغلاق</button>
+  </form>
+
+  <br>
+
+  <form method="post" action="{% url 'incident_reject_close' incident.id %}">
+    {% csrf_token %}
+    <textarea name="note" placeholder="سبب الرفض (اختياري)"></textarea><br>
+    <button type="submit">❌ أرفض الإغلاق</button>
+  </form>
+</section>
+{% endif %}
+
+
+</body>
+</html>

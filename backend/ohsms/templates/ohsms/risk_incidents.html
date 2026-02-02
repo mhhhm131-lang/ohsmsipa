@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>البلاغات المرتبطة بالخطر</title>
+</head>
+<body>
+
+<h2>البلاغات المرتبطة بالخطر</h2>
+
+<p>
+  <strong>الخطر:</strong> {{ risk.title }}
+</p>
+
+<hr>
+
+<table border="1" width="100%" cellpadding="5">
+  <thead>
+    <tr>
+      <th>#</th>
+      <th>عنوان البلاغ</th>
+      <th>نوع البلاغ</th>
+      <th>الحالة</th>
+      <th>التاريخ</th>
+      <th>عرض</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for incident in incidents %}
+      <tr>
+        <td>{{ incident.id }}</td>
+        <td>{{ incident.title }}</td>
+        <td>{{ incident.get_incident_type_display }}</td>
+        <td>{{ incident.get_status_display }}</td>
+        <td>{{ incident.created_at }}</td>
+        <td>
+          <a href="/dashboard/incidents/{{ incident.id }}/">تفاصيل</a>
+        </td>
+      </tr>
+    {% empty %}
+      <tr>
+        <td colspan="6">لا توجد بلاغات مرتبطة بهذا الخطر</td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<br>
+<a href="/risk/">⬅ العودة إلى المخاطر</a>
+
+</body>
+</html>

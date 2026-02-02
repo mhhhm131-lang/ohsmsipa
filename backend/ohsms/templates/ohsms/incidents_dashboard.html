@@ -1,0 +1,66 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>سجل متابعة البلاغات</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{% static 'assets/css/styles.css' %}">
+</head>
+<body>
+
+{% include "ohsms/partials/header.html" %}
+
+<div class="main-wrapper">
+
+  {% include "ohsms/partials/sidebar.html" %}
+
+  <main class="content">
+
+    <section class="card">
+      <h2>📋 سجل متابعة البلاغات</h2>
+
+      <div class="table-wrapper">
+        <table class="reports">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>العنوان</th>
+              <th>النوع</th>
+              <th>الحالة</th>
+              <th>الفرع</th>
+              <th>التاريخ</th>
+              <th>عرض</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for incident in incidents %}
+            <tr>
+              <td>{{ incident.id }}</td>
+              <td>{{ incident.title }}</td>
+              <td>{{ incident.get_incident_type_display }}</td>
+              <td>{{ incident.get_status_display }}</td>
+              <td>{{ incident.branch }}</td>
+              <td>{{ incident.created_at }}</td>
+              <td>
+                <a href="{% url 'incident_detail_dashboard' incident.id %}">
+                  تفاصيل
+                </a>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="7">لا توجد بلاغات</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+    </section>
+
+  </main>
+</div>
+
+</body>
+</html>
