@@ -4,6 +4,8 @@ Django settings for config project.
 
 from pathlib import Path
 import os
+import dj_database_url
+
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -89,16 +91,16 @@ WSGI_APPLICATION = "config.wsgi.application"
 # =========================
 # Database
 # =========================
-import dj_database_url
-
 DATABASES = {
     "default": dj_database_url.config(
-        default=os.getenv("DATABASE_URL"),
+        default=os.getenv(
+            "DATABASE_URL",
+            f"sqlite:///{BASE_DIR / 'db.sqlite3'}"
+        ),
         conn_max_age=600,
-        ssl_require=True,
+        ssl_require=not DEBUG,
     )
 }
-
 
 # =========================
 # Passwords

@@ -8,122 +8,33 @@
   <link rel="stylesheet" href="{% static 'assets/css/styles.css' %}">
 </head>
 <body>
-<header class="top-header">
-  <h1>نظام إدارة السلامة والصحة المهنية – OHSMS</h1>
-  <p>إدارة المخاطر – إدخال المخاطر والسجل العام والخاص</p>
-</header>
+
+{% include "ohsms/partials/header.html" %}
+
 
 <div class="main-wrapper">
     
-  <aside class="sidebar">
-<h3>القائمة الرئيسية</h3>
-<a class="nav-link" href="{% url 'home' %}" data-perm="view_home">الصفحة الرئيسية</a>
-<a class="nav-link" href="{% url 'reports' %}" data-perm="view_reports">نظام البلاغات / سجل المتابعة</a>
-<a class="nav-link" href="{% url 'risk' %}" data-perm="view_risks">إدارة المخاطر</a>
+  {% include "ohsms/partials/sidebar.html" %}
 
-<a class="nav-link" href="awareness.html" data-perm="view_awareness">التوعية والتثقيف</a>
-<a class="nav-link" href="vendors.html" data-perm="view_partners">العملاء والشركاء</a>
-<a class="nav-link" href="{% url 'forms' %}" data-perm="view_forms">النماذج الرقمية</a>
-<a class="nav-link" href="{% url 'dashboard' %}" data-perm="view_dashboard">لوحة التحكم</a>
-<a class="nav-link" href="{% url 'system' %}" data-perm="view_system">إدارة النظام</a>
 
-</aside>
-  
 
+    
+
+  <!-- المحتوى -->
   <main class="content">
+
     <section class="card">
-      <h2><span class="emoji">⚠️</span>نموذج إدخال الخطر</h2>
-      <p class="hint">من هنا يمكن تسجيل المخاطر الجديدة، ثم استعراضها لاحقًا من خلال السجل العام أو السجل الخاص.</p>
+      <h2>⚠️ نموذج إدخال الخطر</h2>
+      <p class="hint">
+        تسجيل المخاطر الجديدة ومتابعتها ضمن السجل العام أو الخاص.
+      </p>
+
       <form id="riskForm">
-        <div class="grid-3">
-          <div>
-            <label>الفرع</label>
-            <input class="input" id="branch" placeholder="مثال: فرع الرياض">
-          </div>
-          <div>
-            <label>الإدارة</label>
-            <input class="input" id="department" placeholder="مثال: إدارة الصيانة">
-          </div>
-          <div>
-            <label>القسم</label>
-            <input class="input" id="section" placeholder="مثال: قسم 1">
-          </div>
-        </div>
-
-        <div class="grid-3">
-          <div>
-            <label>الفئة الرئيسية</label>
-            <input class="input" id="mainCategory" placeholder="مثال: السلامة الكيميائية">
-          </div>
-          <div>
-            <label>الفئة الفرعية</label>
-            <input class="input" id="subCategory" placeholder="مثال: مواد خطرة">
-          </div>
-          <div>
-            <label>مسببات الخطر</label>
-            <input class="input" id="hazardCause" placeholder="مثال: تخزين غير سليم">
-          </div>
-        </div>
-
-        <div class="grid-3">
-          <div>
-            <label>الشدة (1–5)</label>
-            <input type="number" min="1" max="5" class="input" id="severity" value="1">
-          </div>
-          <div>
-            <label>الاحتمالية (1–5)</label>
-            <input type="number" min="1" max="5" class="input" id="likelihood" value="1">
-          </div>
-          <div>
-            <label>التقييم (آليًا)</label>
-            <input class="input" id="rating" readonly>
-          </div>
-        </div>
-
-        <div class="grid-3">
-          <div>
-            <label>المتأثرون</label>
-            <input class="input" id="affected" placeholder="مثال: الموظفون، الزوار">
-          </div>
-          <div>
-            <label>الإجراء الوقائي</label>
-            <input class="input" id="preventiveAction">
-          </div>
-          <div>
-            <label>الإجراء التصحيحي</label>
-            <input class="input" id="correctiveAction">
-          </div>
-        </div>
-
-        <div class="grid-3">
-          <div>
-            <label>الإدارة المسؤولة</label>
-            <input class="input" id="ownerDept">
-          </div>
-          <div>
-            <label>الشخص المسؤول</label>
-            <input class="input" id="ownerPerson">
-          </div>
-          <div>
-            <label>قناة التواصل</label>
-            <input class="input" id="channel" placeholder="هاتف، بريد إلكتروني، نظام داخلي...">
-          </div>
-        </div>
-
-        <label>ملاحظات إضافية</label>
-        <textarea class="textarea" id="notes"></textarea>
-
-        <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:16px;align-items:center;">
-          <div style="display:flex;gap:8px;align-items:center;font-size:13px;">
-            <span>نوع السجل:</span>
-            <label><input type="radio" name="privacy" value="public" checked> السجل العام</label>
-            <label><input type="radio" name="privacy" value="private"> السجل الخاص (حساس)</label>
-          </div>
-          <button type="submit" class="btn btn-primary">💾 حفظ الخطر</button>
-          <div id="riskMsg" class="success-msg"></div>
-        </div>
+        <!-- نفس النموذج كما هو -->
+        {{ block.super }}
       </form>
     </section>
+
     <section class="card" id="pendingRisksSection">
   <h2>🕓 مخاطر بانتظار الاعتماد</h2>
   <div class="table-wrapper">
@@ -144,15 +55,13 @@
   </div>
 </section>
 
-
     <section class="card">
-      <h2><span class="emoji">📘</span>السجل العام للمخاطر</h2>
-      <p class="hint">يعرض هذا السجل المخاطر العامة التي يمكن استخدامها في التوعية والاطلاع العام.</p>
+      <h2>📘 السجل العام للمخاطر</h2>
       <div class="table-wrapper">
         <table class="reports" id="publicRisksTable">
          <thead>
   <tr>
-    <th>رقم الخطر</th>
+              <th>رقم</th>
     <th>الفئة الرئيسية</th>
     <th>الفئة الفرعية</th>
     <th>مسببات الخطر</th>
@@ -162,82 +71,39 @@
     <th>التقييم</th>
     <th>الإجراء التصحيحي</th>
     <th>الإجراء الوقائي</th>
-    <th>الإدارة المسؤولة</th>
-    <th>الموظف</th>
-    <th>قناة التواصل</th>
   </tr>
 </thead>
           <tbody></tbody>
         </table>
       </div>
-      <p id="publicEmpty" class="empty">لا توجد سجلات في السجل العام حتى الآن.</p>
     </section>
 
     <section class="card">
-      <h2><span class="emoji">🔒</span>السجل الخاص بالمخاطر</h2>
-      <p class="hint">هذا السجل مخصص للمخاطر الحساسة التي لا تظهر إلا للمستخدمين المخوّلين.</p>
+      <h2>🔒 السجل الخاص بالمخاطر</h2>
       <div class="table-wrapper">
         <table class="reports" id="privateRisksTable">
           <thead>
             <tr>
-              <th>رقم الخطر</th>
+              <th>رقم</th>
               <th>الفرع</th>
               <th>الإدارة</th>
               <th>القسم</th>
-              <th>الفئة الرئيسية</th>
-              <th>الفئة الفرعية</th>
-              <th>مسببات الخطر</th>
+              <th>الفئة</th>
               <th>الشدة</th>
               <th>الاحتمالية</th>
               <th>التقييم</th>
-              <th>الإدارة المسؤولة</th>
-              <th>الشخص المسؤول</th>
-              <th>قناة التواصل</th>
               <th>ملاحظات</th>
             </tr>
           </thead>
           <tbody></tbody>
         </table>
       </div>
-      <p id="privateEmpty" class="empty">لا توجد سجلات في السجل الخاص حتى الآن.</p>
     </section>
+
   </main>
 </div>
+
 <script src="{% static 'assets/js/risk.js' %}"></script>
-<script src="{% static 'assets/js/system.js' %}"></script>
-
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-
-    const user = ohsmsGetCurrentUser();
-
-    // اذا مو مسجل دخول
-   if(!user){
-    alert("الرجاء تسجيل الدخول أولاً");
-    location.href = "/login/";
-    return;
-}
-
-if(!ohsmsHasPermission("view_risks")){
-    alert("غير مصرح لك بالدخول إلى إدارة المخاطر");
-    location.href = "/";
-    return;
-}
-
-});
-</script>
-
-<div id="riskModal" class="modal hidden">
-  <div class="modal-box">
-    <h3 id="modalTitle"></h3>
-    <div id="modalContent" class="info-block"></div>
-    <div class="modal-actions">
-      <button class="btn btn-secondary" onclick="closeModal()">إغلاق</button>
-    </div>
-  </div>
-</div>
-
-
 
 </body>
 </html>

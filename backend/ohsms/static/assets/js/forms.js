@@ -1,7 +1,12 @@
-
+/* =========================
+   Constants
+========================= */
 const TEMPLATE_ID = 'CHECK-GENERAL';
 const STORAGE_KEY = 'ohsms_forms_responses';
 
+/* =========================
+   Questions Template
+========================= */
 const templateQuestions = [
   'هل تتوفر خطط إخلاء مكتوبة ومعلنة للموظفين؟',
   'هل يوجد نظام ابتكار وتقديم مقترحات تحسين؟',
@@ -20,150 +25,179 @@ const templateQuestions = [
   'هل تشعر أن ثقافة السلامة والجودة مدعومة من الإدارة العليا؟'
 ];
 
-function loadResponses(){
-  try{return JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]');}
-  catch(e){return [];}
+/* =========================
+   Local Storage Helpers
+========================= */
+function loadResponses() {
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+  } catch {
+    return [];
+  }
 }
-function saveResponses(arr){
+
+function saveResponses(arr) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
 }
 
-function generateFormId(){
+function generateFormId() {
   const year = new Date().getFullYear();
-  const all = loadResponses();
-  const nums = all
-    .filter(r=>String(r.id||'').startsWith('FRM-'+year))
-    .map(r=>parseInt(String(r.id).split('-').pop()||'0',10) || 0);
-  const next = (nums.length?Math.max.apply(null,nums):0)+1;
-  return 'FRM-'+year+'-'+String(next).padStart(4,'0');
+  const nums = loadResponses()
+    .map(r => parseInt(String(r.id || '').split('-').pop() || '0', 10))
+    .filter(n => !isNaN(n));
+
+  const next = (nums.length ? Math.max(...nums) : 0) + 1;
+  return `FRM-${year}-${String(next).padStart(4, '0')}`;
 }
 
+/* =========================
+   Questions Builder
+========================= */
 let notesByIndex = {};
 let currentQuestionIndex = null;
 
-function buildQuestions(){
+function buildQuestions() {
   const container = document.getElementById('questionsContainer');
   container.innerHTML = '';
-  templateQuestions.forEach((q,idx)=>{
-    const wrapper = document.createElement('div');
-    wrapper.className = 'card';
-    wrapper.style.marginBottom = '10px';
-    wrapper.innerHTML = `
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
-        <div style="font-size:13px;font-weight:600;">${idx+1}. ${q}</div>
-        <div style="display:flex;gap:8px;align-items:center;font-size:13px;">
+
+  templateQuestions.forEach((q, idx) => {
+    const block = document.createElement('div');
+    block.className = 'card';
+    block.style.marginBottom = '10px';
+
+    block.innerHTML = `
+      <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+        <strong>${idx + 1}. ${q}</strong>
+        <div style="display:flex;gap:8px;align-items:center;">
           <label><input type="radio" name="q_${idx}" value="yes"> نعم</label>
           <label><input type="radio" name="q_${idx}" value="no"> لا</label>
           <label><input type="radio" name="q_${idx}" value="na" checked> لا ينطبق</label>
-          <button type="button" class="btn btn-small btn-secondary note-btn" data-index="${idx}">📝 ملاحظات</button>
+          <button type="button" class="btn btn-small btn-secondary note-btn" data-index="${idx}">
+            📝 ملاحظات
+          </button>
         </div>
       </div>
     `;
-    container.appendChild(wrapper);
+    container.appendChild(block);
   });
 }
 
-function updateCounters(){
-  const responses = loadResponses();
+/* =========================
+   Counters & Table
+========================= */
+function updateCounters() {
+  const total = loadResponses().length;
   document.getElementById('formsCount').textContent = '1 نموذج';
-  document.getElementById('sentCount').textContent = responses.length + ' مهمة/نموذج';
-  document.getElementById('receivedCount').textContent = responses.length + ' رد';
+  document.getElementById('sentCount').textContent = `${total} مهمة`;
+  document.getElementById('receivedCount').textContent = `${total} رد`;
 }
 
-function renderResponses(){
+function renderResponses() {
   const responses = loadResponses();
   const tbody = document.querySelector('#responsesTable tbody');
   tbody.innerHTML = '';
-  if(!responses.length){
+
+  if (!responses.length) {
     document.getElementById('responsesEmpty').style.display = 'block';
     return;
   }
+
   document.getElementById('responsesEmpty').style.display = 'none';
-  responses.forEach(r=>{
+
+  responses.forEach(r => {
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td>${r.id}</td>
       <td>${new Date(r.createdAt).toLocaleString()}</td>
-      <td>${r.sender||''}</td>
-      <td>${r.receiver||''}</td>
-      <td>${r.filler||''}</td>
-      <td>${(r.answers||[]).length}</td>
+      <td>${r.sender || ''}</td>
+      <td>${r.receiver || ''}</td>
+      <td>${r.filler || ''}</td>
+      <td>${r.answers.length}</td>
     `;
     tbody.appendChild(tr);
   });
 }
 
-document.addEventListener('DOMContentLoaded', function(){
+/* =========================
+   DOM Ready
+========================= */
+document.addEventListener('DOMContentLoaded', function () {
+
   buildQuestions();
   updateCounters();
   renderResponses();
 
-  // notes modal logic
   const modal = document.getElementById('notesModal');
   const notesInput = document.getElementById('notesInput');
-  document.getElementById('questionsContainer').addEventListener('click', function(e){
+
+  // Notes modal
+  document.getElementById('questionsContainer').addEventListener('click', e => {
     const btn = e.target.closest('.note-btn');
-    if(!btn) return;
-    currentQuestionIndex = parseInt(btn.getAttribute('data-index'),10);
+    if (!btn) return;
+
+    currentQuestionIndex = parseInt(btn.dataset.index, 10);
     notesInput.value = notesByIndex[currentQuestionIndex] || '';
     modal.classList.remove('hidden');
   });
-  document.getElementById('cancelNotesBtn').addEventListener('click', function(){
+
+  document.getElementById('cancelNotesBtn').onclick = () => {
     modal.classList.add('hidden');
     currentQuestionIndex = null;
-  });
-  document.getElementById('saveNotesBtn').addEventListener('click', function(){
-    if(currentQuestionIndex==null) return;
+  };
+
+  document.getElementById('saveNotesBtn').onclick = () => {
+    if (currentQuestionIndex === null) return;
     notesByIndex[currentQuestionIndex] = notesInput.value.trim();
     modal.classList.add('hidden');
     currentQuestionIndex = null;
-  });
+  };
 
-  document.getElementById('createLinkBtn').addEventListener('click', function(){
-    const target = document.getElementById('target').value.trim();
-    const note = document.getElementById('taskNote').value.trim();
-    const msg = document.getElementById('shareInfo');
-    let txt = 'تم إنشاء رابط تعبئة للنموذج. يمكن مشاركته داخل النظام.';
-    if(target) txt += ' المستلم: '+target+'.';
-    if(note) txt += ' ملاحظة: '+note;
-    msg.textContent = txt;
-  });
+  // Create link (UI only)
+  document.getElementById('createLinkBtn').onclick = () => {
+    const t = target.value.trim();
+    const n = taskNote.value.trim();
+    let msg = 'تم إنشاء رابط تعبئة للنموذج.';
+    if (t) msg += ` المستلم: ${t}.`;
+    if (n) msg += ` ملاحظة: ${n}`;
+    shareInfo.textContent = msg;
+  };
 
-  document.getElementById('submitFormBtn').addEventListener('click', function(){
-    const sender = document.getElementById('senderName').value.trim();
-    const receiver = document.getElementById('receiverName').value.trim();
-    const filler = document.getElementById('fillerName').value.trim();
-
-    const answers = templateQuestions.map((q,idx)=>{
-      const checked = document.querySelector('input[name="q_'+idx+'"]:checked');
-      return {
-        question: q,
-        value: checked ? checked.value : 'na',
-        notes: notesByIndex[idx] || ''
-      };
-    });
+  // Submit form
+  document.getElementById('submitFormBtn').onclick = () => {
 
     const record = {
       id: generateFormId(),
       templateId: TEMPLATE_ID,
-      sender,
-      receiver,
-      filler,
-      answers,
+      sender: senderName.value.trim(),
+      receiver: receiverName.value.trim(),
+      filler: fillerName.value.trim(),
+      answers: templateQuestions.map((q, idx) => {
+        const checked = document.querySelector(`input[name="q_${idx}"]:checked`);
+        return {
+          question: q,
+          value: checked ? checked.value : 'na',
+          notes: notesByIndex[idx] || ''
+        };
+      }),
       createdAt: new Date().toISOString()
     };
 
     const all = loadResponses();
     all.push(record);
     saveResponses(all);
+
     notesByIndex = {};
-    document.getElementById('formMsg').textContent = '✔ تم إرسال النموذج وحفظه في السجل.';
-    setTimeout(()=>{document.getElementById('formMsg').textContent='';},3000);
-    document.getElementById('senderName').value='';
-    document.getElementById('receiverName').value='';
-    document.getElementById('fillerName').value='';
-    document.querySelectorAll('#questionsContainer input[type="radio"][value="na"]').forEach(r=>{r.checked=true;});
+    formMsg.textContent = '✔ تم إرسال النموذج بنجاح.';
+    setTimeout(() => formMsg.textContent = '', 3000);
+
+    senderName.value = '';
+    receiverName.value = '';
+    fillerName.value = '';
+    document
+      .querySelectorAll('#questionsContainer input[value="na"]')
+      .forEach(r => r.checked = true);
+
     updateCounters();
     renderResponses();
-  });
+  };
 });
